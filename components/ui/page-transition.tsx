@@ -69,6 +69,7 @@ export default function PageTransition({ children, isChanging, direction = "down
           mass: 1,
         }}
         className="w-full h-full"
+        style={{ pointerEvents: "auto" }} // Explicitly set pointer-events to auto
       >
         {children}
       </motion.div>

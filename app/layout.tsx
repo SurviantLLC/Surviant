@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Surviant Technologies | Digital Innovation Studio",
   description:
     "Transforming ideas into immersive digital experiences. We build exceptional web applications from wireframes to deployment.",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({

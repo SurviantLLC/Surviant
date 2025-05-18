@@ -14,7 +14,6 @@ import NoiseBackground from "@/components/ui/noise-background"
 import ParticleBackground from "@/components/ui/particle-background"
 import LoadingScreen from "@/components/loading-screen"
 import { cn } from "@/lib/utils"
-import PageTransition from "@/components/ui/page-transition"
 import SectionIndicator from "@/components/ui/section-indicator"
 
 export default function Home() {
@@ -22,11 +21,9 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState("home")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [hasWebGL, setHasWebGL] = useState(true)
-  const [isChangingSection, setIsChangingSection] = useState(false)
-  const [isScrolling, setIsScrolling] = useState(false)
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const lastScrollTime = useRef<number>(0)
-  const scrollDirection = useRef<"up" | "down">("down")
+  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down")
+  const [lastScrollTime, setLastScrollTime] = useState(0)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const sections = [
     { id: "home", label: "HOME" },
@@ -60,135 +57,137 @@ export default function Home() {
 
   // Handle section change
   const handleSectionChange = (section: string) => {
-    if (section === activeSection || isChangingSection) return
+    if (section === activeSection) return
+    setActiveSection(section)
+    setIsMenuOpen(false)
 
-    setIsChangingSection(true)
-    setTimeout(() => {
-      setActiveSection(section)
-      setIsMenuOpen(false)
-      setTimeout(() => {
-        setIsChangingSection(false)
-      }, 500)
-    }, 300)
+    // Scroll to top of the new section
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0
+    }
   }
 
-  // Handle scroll events
+  // Improved scroll handler that allows scrolling within sections
   useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault()
+    function handleWheel(e: WheelEvent) {
+      // Don't prevent default scrolling - let the browser handle it naturally
 
-      // Throttle scroll events
-      const now = Date.now()
-      if (now - lastScrollTime.current < 800 || isChangingSection || isScrolling) return
-      lastScrollTime.current = now
+      // Get the current scroll container
+      const container = contentRef.current
+      if (!container) return
 
-      // Determine scroll direction
-      scrollDirection.current = e.deltaY > 0 ? "down" : "up"
+      // Check if we're at the top or bottom of the container
+      const isAtTop = container.scrollTop <= 0
+      const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 5
 
-      // Find current section index
-      const currentIndex = sections.findIndex((section) => section.id === activeSection)
+      // Only handle section changes when at the boundaries
+      if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+        // Simple throttle for section changes
+        const now = Date.now()
+        if (now - lastScrollTime < 300) return
+        setLastScrollTime(now)
 
-      // Calculate next section index
-      let nextIndex = currentIndex
-      if (scrollDirection.current === "down" && currentIndex < sections.length - 1) {
-        nextIndex = currentIndex + 1
-      } else if (scrollDirection.current === "up" && currentIndex > 0) {
-        nextIndex = currentIndex - 1
-      }
+        // Determine direction
+        const direction = e.deltaY > 0 ? "down" : "up"
+        setScrollDirection(direction)
 
-      // Change section if needed
-      if (nextIndex !== currentIndex) {
-        setIsScrolling(true)
-        handleSectionChange(sections[nextIndex].id)
+        // Find current section index
+        const currentIndex = sections.findIndex((section) => section.id === activeSection)
 
-        // Reset scrolling state after animation completes
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current)
+        // Calculate next section index
+        let nextIndex = currentIndex
+        if (direction === "down" && currentIndex < sections.length - 1 && isAtBottom) {
+          nextIndex = currentIndex + 1
+          e.preventDefault() // Prevent default only when changing sections
+        } else if (direction === "up" && currentIndex > 0 && isAtTop) {
+          nextIndex = currentIndex - 1
+          e.preventDefault() // Prevent default only when changing sections
         }
-        scrollTimeoutRef.current = setTimeout(() => {
-          setIsScrolling(false)
-        }, 1000)
+
+        // Change section if needed
+        if (nextIndex !== currentIndex) {
+          handleSectionChange(sections[nextIndex].id)
+        }
       }
     }
 
-    // Handle touch events for mobile
+    // Handle touch events
     let touchStartY = 0
-    const handleTouchStart = (e: TouchEvent) => {
+    function handleTouchStart(e: TouchEvent) {
       touchStartY = e.touches[0].clientY
     }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!touchStartY || isChangingSection || isScrolling) return
+    function handleTouchMove(e: TouchEvent) {
+      if (!touchStartY) return
+
+      const container = contentRef.current
+      if (!container) return
+
+      // Check if we're at the top or bottom of the container
+      const isAtTop = container.scrollTop <= 0
+      const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 5
 
       const touchY = e.touches[0].clientY
       const deltaY = touchStartY - touchY
 
-      // Only trigger if significant movement
-      if (Math.abs(deltaY) < 50) return
+      // Only handle section changes when at the boundaries
+      if ((deltaY < 0 && isAtTop) || (deltaY > 0 && isAtBottom)) {
+        // Simple throttle
+        const now = Date.now()
+        if (now - lastScrollTime < 300) return
+        setLastScrollTime(now)
 
-      // Throttle touch events
-      const now = Date.now()
-      if (now - lastScrollTime.current < 800) return
-      lastScrollTime.current = now
+        // Only trigger if significant movement
+        if (Math.abs(deltaY) < 20) return
 
-      // Determine direction
-      scrollDirection.current = deltaY > 0 ? "down" : "up"
+        // Determine direction
+        const direction = deltaY > 0 ? "down" : "up"
+        setScrollDirection(direction)
 
-      // Find current section index
-      const currentIndex = sections.findIndex((section) => section.id === activeSection)
+        // Find current section index
+        const currentIndex = sections.findIndex((section) => section.id === activeSection)
 
-      // Calculate next section index
-      let nextIndex = currentIndex
-      if (scrollDirection.current === "down" && currentIndex < sections.length - 1) {
-        nextIndex = currentIndex + 1
-      } else if (scrollDirection.current === "up" && currentIndex > 0) {
-        nextIndex = currentIndex - 1
-      }
-
-      // Change section if needed
-      if (nextIndex !== currentIndex) {
-        setIsScrolling(true)
-        handleSectionChange(sections[nextIndex].id)
-        touchStartY = 0 // Reset touch position
-
-        // Reset scrolling state after animation completes
-        if (scrollTimeoutRef.current) {
-          clearTimeout(scrollTimeoutRef.current)
+        // Calculate next section index
+        let nextIndex = currentIndex
+        if (direction === "down" && currentIndex < sections.length - 1 && isAtBottom) {
+          nextIndex = currentIndex + 1
+        } else if (direction === "up" && currentIndex > 0 && isAtTop) {
+          nextIndex = currentIndex - 1
         }
-        scrollTimeoutRef.current = setTimeout(() => {
-          setIsScrolling(false)
-        }, 1000)
+
+        // Change section if needed
+        if (nextIndex !== currentIndex) {
+          handleSectionChange(sections[nextIndex].id)
+          touchStartY = 0 // Reset touch position
+        }
       }
     }
 
     // Add event listeners
-    window.addEventListener("wheel", handleWheel, { passive: false })
-    window.addEventListener("touchstart", handleTouchStart, { passive: true })
-    window.addEventListener("touchmove", handleTouchMove, { passive: true })
+    document.addEventListener("wheel", handleWheel, { passive: true })
+    document.addEventListener("touchstart", handleTouchStart, { passive: true })
+    document.addEventListener("touchmove", handleTouchMove, { passive: true })
 
     return () => {
-      window.removeEventListener("wheel", handleWheel)
-      window.removeEventListener("touchstart", handleTouchStart)
-      window.removeEventListener("touchmove", handleTouchMove)
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current)
-      }
+      document.removeEventListener("wheel", handleWheel)
+      document.removeEventListener("touchstart", handleTouchStart)
+      document.removeEventListener("touchmove", handleTouchMove)
     }
-  }, [activeSection, isChangingSection, isScrolling, sections])
+  }, [activeSection, lastScrollTime, sections])
 
-  // Handle keyboard navigation
+  // Add keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isChangingSection || isScrolling) return
-
+    function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         const currentIndex = sections.findIndex((section) => section.id === activeSection)
         if (currentIndex < sections.length - 1) {
+          setScrollDirection("down")
           handleSectionChange(sections[currentIndex + 1].id)
         }
       } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
         const currentIndex = sections.findIndex((section) => section.id === activeSection)
         if (currentIndex > 0) {
+          setScrollDirection("up")
           handleSectionChange(sections[currentIndex - 1].id)
         }
       }
@@ -196,7 +195,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [activeSection, isChangingSection, isScrolling, sections])
+  }, [activeSection, sections])
 
   if (isLoading) {
     return <LoadingScreen />
@@ -231,35 +230,54 @@ export default function Home() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
+            initial={{ opacity: 0, y: scrollDirection === "down" ? 50 : -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: scrollDirection === "down" ? -50 : 50 }}
+            transition={{ duration: 0.5 }}
             className={cn("absolute inset-0 pt-24 overflow-auto scrollbar-hide", isMenuOpen && "pointer-events-none")}
+            ref={contentRef}
           >
-            <PageTransition isChanging={isChangingSection} direction={scrollDirection.current}>
-              {activeSection === "home" && <HomeSection onExplore={() => handleSectionChange("services")} />}
-              {activeSection === "services" && <ServicesSection />}
-              {activeSection === "work" && <WorkSection />}
-              {activeSection === "clients" && <ClientsSection />}
-              {activeSection === "technologies" && <TechnologiesSection />}
-              {activeSection === "about" && <AboutSection />}
-              {activeSection === "contact" && <ContactSection />}
-            </PageTransition>
+            {activeSection === "home" && <HomeSection onExplore={() => handleSectionChange("services")} />}
+            {activeSection === "services" && <ServicesSection />}
+            {activeSection === "work" && <WorkSection />}
+            {activeSection === "clients" && <ClientsSection />}
+            {activeSection === "technologies" && <TechnologiesSection />}
+            {activeSection === "about" && <AboutSection />}
+            {activeSection === "contact" && <ContactSection />}
           </motion.div>
         </AnimatePresence>
-
-        {/* Page Transition Overlay */}
-        <AnimatePresence>
-          {isChangingSection && (
-            <motion.div
-              initial={{ scaleY: 0, originY: scrollDirection.current === "down" ? 0 : 1 }}
-              animate={{ scaleY: 1 }}
-              exit={{ scaleY: 0, originY: scrollDirection.current === "down" ? 1 : 0 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-0 z-30 bg-gradient-to-r from-cyan-500/20 to-purple-600/20 backdrop-blur-sm pointer-events-none"
-            />
-          )}
-        </AnimatePresence>
       </div>
+
       {/* Section Indicator */}
       <SectionIndicator activeSection={activeSection} sections={sections} onSectionChange={handleSectionChange} />
+
+      {/* Debug Controls */}
+      <div className="fixed bottom-4 left-4 z-50 flex gap-2">
+        <button
+          onClick={() => {
+            const currentIndex = sections.findIndex((section) => section.id === activeSection)
+            if (currentIndex > 0) {
+              setScrollDirection("up")
+              handleSectionChange(sections[currentIndex - 1].id)
+            }
+          }}
+          className="bg-black/50 backdrop-blur-sm border border-white/20 text-white px-4 py-2 rounded-md"
+        >
+          Up
+        </button>
+        <button
+          onClick={() => {
+            const currentIndex = sections.findIndex((section) => section.id === activeSection)
+            if (currentIndex < sections.length - 1) {
+              setScrollDirection("down")
+              handleSectionChange(sections[currentIndex + 1].id)
+            }
+          }}
+          className="bg-black/50 backdrop-blur-sm border border-white/20 text-white px-4 py-2 rounded-md"
+        >
+          Down
+        </button>
+      </div>
     </main>
   )
 }
