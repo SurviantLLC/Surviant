@@ -5,6 +5,7 @@ import { motion, useInView, useAnimation } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import FloatingElements from "@/components/ui/floating-elements"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 interface HomeSectionProps {
   onExplore: () => void
@@ -15,6 +16,7 @@ export default function HomeSection({ onExplore }: HomeSectionProps) {
   const isInView = useInView(ref, { once: true })
   const controls = useAnimation()
   const [hasWebGL, setHasWebGL] = useState(true)
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   // Check for WebGL support
   useEffect(() => {
@@ -55,8 +57,8 @@ export default function HomeSection({ onExplore }: HomeSectionProps) {
 
   return (
     <div className="relative h-screen flex flex-col justify-center items-center px-4 overflow-hidden" ref={ref}>
-      {/* 3D Floating Elements - conditionally rendered based on WebGL support */}
-      {hasWebGL && <FloatingElements />}
+      {/* 3D Floating Elements - conditionally rendered based on WebGL support and not on mobile */}
+      {hasWebGL && !isMobile && <FloatingElements />}
 
       <motion.div
         ref={ref}
@@ -73,7 +75,7 @@ export default function HomeSection({ onExplore }: HomeSectionProps) {
 
         <motion.h1
           variants={itemVariants}
-          className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight tracking-tight"
+          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight tracking-tight"
         >
           <span className="block">We Create</span>
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-purple-600">
@@ -81,25 +83,28 @@ export default function HomeSection({ onExplore }: HomeSectionProps) {
           </span>
         </motion.h1>
 
-        <motion.p variants={itemVariants} className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10">
+        <motion.p
+          variants={itemVariants}
+          className="text-base sm:text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10"
+        >
           Transforming ideas into exceptional digital products. From custom web applications to immersive 3D
           experiences, we build technology that drives innovation and business growth.
         </motion.p>
 
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
-            size="lg"
+            size={isMobile ? "default" : "lg"}
             onClick={onExplore}
-            className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 rounded-full px-8"
+            className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 rounded-full px-6 sm:px-8"
           >
             Explore Our Work
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
 
           <Button
-            size="lg"
+            size={isMobile ? "default" : "lg"}
             variant="outline"
-            className="border-gray-700 text-white hover:bg-white/10 rounded-full px-8"
+            className="border-gray-700 text-white hover:bg-white/10 rounded-full px-6 sm:px-8"
           >
             Get in Touch
           </Button>

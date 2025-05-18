@@ -68,13 +68,20 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [isMenuOpen, setIsMenuOpen])
 
-  // Lock body scroll when menu is open
+  // Lock body scroll when menu is open on mobile
   useEffect(() => {
-    // Don't lock body scroll as it can interfere with the main scrolling
+    if (isMobile) {
+      if (isMenuOpen) {
+        document.body.style.overflow = "hidden"
+      } else {
+        document.body.style.overflow = ""
+      }
+    }
+
     return () => {
       document.body.style.overflow = ""
     }
-  }, [isMenuOpen])
+  }, [isMenuOpen, isMobile])
 
   return (
     <>
@@ -93,8 +100,7 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
             className="text-xl font-bold tracking-wider cursor-pointer"
             onClick={() => {
               onSectionChange("home")
-              // Make sure we're actually changing to the home section
-              console.log("Navigating to home section")
+              if (isMenuOpen) setIsMenuOpen(false)
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -105,6 +111,7 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault()
                 onSectionChange("home")
+                if (isMenuOpen) setIsMenuOpen(false)
               }
             }}
           >
@@ -166,7 +173,7 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
             animate="open"
             exit="closed"
             variants={menuVariants}
-            className="fixed inset-0 z-40 bg-black/95 md:hidden pt-24"
+            className="fixed inset-0 z-40 bg-black/95 md:hidden pt-24 overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -179,7 +186,10 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    onClick={() => onSectionChange(item.id)}
+                    onClick={() => {
+                      onSectionChange(item.id)
+                      setIsMenuOpen(false)
+                    }}
                     className={cn(
                       "flex items-center justify-between py-4 text-xl font-medium border-b border-gray-800",
                       activeSection === item.id ? "text-cyan-500" : "text-white",

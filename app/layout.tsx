@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description:
     "Transforming ideas into immersive digital experiences. We build exceptional web applications from wireframes to deployment.",
   generator: "v0.dev",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 }
 
 export default function RootLayout({
