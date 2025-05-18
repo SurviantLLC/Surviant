@@ -36,12 +36,12 @@ export default function ParticleBackground() {
         constructor() {
           this.x = Math.random() * canvas.width
           this.y = Math.random() * canvas.height
-          this.size = Math.random() * 2 + 0.5
-          this.speedX = (Math.random() - 0.5) * 0.5
-          this.speedY = (Math.random() - 0.5) * 0.5
+          this.size = Math.random() * 1.5 + 0.5 // Smaller, more uniform dots
+          this.speedX = (Math.random() - 0.5) * 0.3
+          this.speedY = (Math.random() - 0.5) * 0.3
 
-          // Cyan to purple gradient colors
-          const hue = 180 + Math.random() * 60
+          // Use a more tech-focused color palette: cyan, blue, purple
+          const hue = 180 + Math.random() * 90 // Range from cyan to purple
           this.color = `hsla(${hue}, 100%, 70%, ${Math.random() * 0.5 + 0.2})`
         }
 
@@ -65,28 +65,39 @@ export default function ParticleBackground() {
         }
       }
 
-      // Create particles
+      // Create particles - reduce count for mobile
       const particles: Particle[] = []
-      const particleCount = isMobile ? 50 : 100
+      const particleCount = isMobile ? 50 : 150
 
       for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle())
       }
 
-      // Connect particles with lines
+      // Connect particles with lines - optimize for mobile
       function connectParticles() {
         if (!ctx) return
-        const maxDistance = 150
+        const maxDistance = isMobile ? 80 : 150 // Shorter connections on mobile
+        const maxConnections = isMobile ? 3 : 5 // Fewer connections on mobile
 
         for (let i = 0; i < particles.length; i++) {
-          for (let j = i; j < particles.length; j++) {
+          let connections = 0
+
+          // Only connect to nearest particles to improve performance
+          for (let j = i + 1; j < particles.length; j++) {
+            if (connections >= maxConnections) break
+
             const dx = particles[i].x - particles[j].x
             const dy = particles[i].y - particles[j].y
             const distance = Math.sqrt(dx * dx + dy * dy)
 
             if (distance < maxDistance) {
-              const opacity = 1 - distance / maxDistance
-              ctx.strokeStyle = `rgba(100, 200, 255, ${opacity * 0.2})`
+              connections++
+
+              // Create a gradient opacity based on distance
+              const opacity = (1 - distance / maxDistance) * (isMobile ? 0.15 : 0.2)
+
+              // Use a tech-looking gradient for the lines
+              ctx.strokeStyle = `rgba(100, 200, 255, ${opacity})`
               ctx.lineWidth = 0.5
               ctx.beginPath()
               ctx.moveTo(particles[i].x, particles[i].y)
@@ -97,9 +108,22 @@ export default function ParticleBackground() {
         }
       }
 
-      // Animation loop
+      // Animation loop with frame limiting for mobile
       let animationId: number
-      function animate() {
+      let lastFrameTime = 0
+      const targetFPS = isMobile ? 30 : 60 // Lower FPS target for mobile
+
+      function animate(timestamp: number) {
+        // Limit frame rate on mobile
+        if (isMobile) {
+          const elapsed = timestamp - lastFrameTime
+          if (elapsed < 1000 / targetFPS) {
+            animationId = requestAnimationFrame(animate)
+            return
+          }
+          lastFrameTime = timestamp
+        }
+
         if (!ctx) return
 
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -114,7 +138,7 @@ export default function ParticleBackground() {
         animationId = requestAnimationFrame(animate)
       }
 
-      animate()
+      animate(0)
 
       return () => {
         window.removeEventListener("resize", setCanvasDimensions)
@@ -127,5 +151,5 @@ export default function ParticleBackground() {
     }
   }, [isMobile])
 
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
 }

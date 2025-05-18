@@ -82,7 +82,7 @@ export default function ServicesSection() {
   }
 
   return (
-    <div className="min-h-screen py-20 px-4" ref={ref}>
+    <div className="min-h-screen py-20 px-4 scroll-smooth" ref={ref}>
       <div className="container mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -116,7 +116,7 @@ export default function ServicesSection() {
                 glareColor={service.color.split(" ")[0].split("-")[1]}
                 borderColor={service.color.split(" ")[2]}
               >
-                <div className="p-6">
+                <div className="p-6 h-[220px] flex flex-col justify-center items-center text-center">
                   <div
                     className={cn(
                       "w-12 h-12 rounded-lg flex items-center justify-center mb-5 bg-gradient-to-br",

@@ -2,6 +2,7 @@
 
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
+import Image from "next/image"
 
 export default function ClientsSection() {
   const ref = useRef<HTMLDivElement>(null)
@@ -9,21 +10,35 @@ export default function ClientsSection() {
 
   const testimonials = [
     {
-      quote: "Surviant transformed our digital presence with a cutting-edge platform that exceeded our expectations.",
+      quote:
+        "Surviant transformed our digital presence with a cutting-edge platform that exceeded our expectations. Their team's attention to detail and technical expertise made all the difference.",
       author: "Sarah Johnson",
-      position: "CTO, TechCorp",
+      position: "CTO, NexGen Solutions",
+      image: "/testimonial-1.png",
     },
     {
       quote:
-        "The team's technical expertise and creative approach helped us achieve a 40% increase in user engagement.",
+        "The team's technical expertise and creative approach helped us achieve a 40% increase in user engagement. They truly understand how to balance aesthetics with functionality.",
       author: "Michael Chen",
       position: "Product Director, InnovateLabs",
+      image: "/testimonial-2.png",
     },
     {
-      quote: "Working with Surviant was a game-changer for our business. Their solutions are innovative and effective.",
+      quote:
+        "Working with Surviant was a game-changer for our business. Their solutions are innovative, effective, and delivered on time. We've seen remarkable growth since launching our new platform.",
       author: "Priya Patel",
-      position: "CEO, FutureWave",
+      position: "CEO, FutureWave Technologies",
+      image: "/testimonial-3.png",
     },
+  ]
+
+  const clients = [
+    { name: "TechCorp", logo: "/client-logo-1.png" },
+    { name: "InnovateLabs", logo: "/client-logo-2.png" },
+    { name: "FutureWave", logo: "/client-logo-3.png" },
+    { name: "GlobalTech", logo: "/client-logo-4.png" },
+    { name: "NextGen", logo: "/client-logo-5.png" },
+    { name: "DigiSolutions", logo: "/client-logo-6.png" },
   ]
 
   const containerVariants = {
@@ -54,10 +69,13 @@ export default function ClientsSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="inline-block py-1 px-3 border border-cyan-500/30 rounded-full text-cyan-500 text-xs tracking-wider mb-4">
+          <span
+            className="inline-block py-1 px-3 border border-cyan-500/30 rounded-full text-cyan-500 text-xs tracking-wider mb-4"
+            id="clients-heading"
+          >
             OUR CLIENTS
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6" aria-labelledby="clients-heading">
             Trusted by Industry <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-purple-600">
               Leading Companies
@@ -65,17 +83,28 @@ export default function ClientsSection() {
           </h2>
           <p className="text-lg text-gray-400 max-w-3xl mx-auto">
             We've partnered with forward-thinking companies across various industries to deliver exceptional digital
-            experiences.
+            experiences that drive real business results.
           </p>
         </motion.div>
 
         {/* Client Logos */}
         <div className="mb-20 overflow-hidden">
           <div className="flex flex-wrap justify-center gap-8">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="w-32 h-12 bg-gray-800 rounded flex items-center justify-center">
-                <span className="text-gray-400 text-sm">Client {index + 1}</span>
-              </div>
+            {clients.map((client, index) => (
+              <motion.div
+                key={index}
+                className="w-32 h-16 relative bg-gray-800 rounded flex items-center justify-center overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Image
+                  src={client.logo || "/placeholder.svg"}
+                  alt={`${client.name} logo`}
+                  fill
+                  className="object-contain p-2"
+                />
+              </motion.div>
             ))}
           </div>
         </div>
@@ -100,8 +129,13 @@ export default function ClientsSection() {
               <p className="text-lg mb-8 italic text-gray-300">{testimonial.quote}</p>
 
               <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full overflow-hidden mr-4 bg-gray-800 flex items-center justify-center">
-                  <span className="text-gray-400 text-xs">{testimonial.author.charAt(0)}</span>
+                <div className="w-12 h-12 rounded-full overflow-hidden mr-4 relative">
+                  <Image
+                    src={testimonial.image || "/placeholder.svg"}
+                    alt={testimonial.author}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div>
                   <div className="font-medium">{testimonial.author}</div>
@@ -122,7 +156,7 @@ export default function ClientsSection() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { value: "98%", label: "CLIENT SATISFACTION" },
-              { value: "150+", label: "PROJECTS DELIVERED" },
+              { value: "120+", label: "PROJECTS DELIVERED" },
               { value: "40%", label: "AVG. PERFORMANCE BOOST" },
               { value: "8+", label: "YEARS OF EXCELLENCE" },
             ].map((stat, index) => (

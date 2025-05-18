@@ -13,7 +13,7 @@ export default function AboutSection() {
     {
       name: "Srivant V",
       role: "Founder & CEO",
-      bio: "Former Google engineer with 15+ years of experience in building scalable web applications.",
+      bio: "Full-stack developer specializing in innovative solutions and digital experiences.",
       social: {
         twitter: "#",
         linkedin: "#",
@@ -24,26 +24,6 @@ export default function AboutSection() {
       name: "Dhyuthi S",
       role: "CTO",
       bio: "Full-stack developer specializing in high-performance systems and innovative solutions.",
-      social: {
-        twitter: "#",
-        linkedin: "#",
-        github: "#",
-      },
-    },
-    {
-      name: "Sarah Johnson",
-      role: "Creative Director",
-      bio: "Award-winning designer with a passion for creating intuitive and beautiful user experiences.",
-      social: {
-        twitter: "#",
-        linkedin: "#",
-        github: "#",
-      },
-    },
-    {
-      name: "Priya Patel",
-      role: "Product Strategist",
-      bio: "Former product manager at Amazon with expertise in user research and product strategy.",
       social: {
         twitter: "#",
         linkedin: "#",
@@ -148,9 +128,9 @@ export default function AboutSection() {
           >
             {[
               { label: "Projects Completed", value: "150+" },
-              { label: "Years Experience", value: "8+" },
-              { label: "Team Members", value: "25+" },
+              { label: "Client Satisfaction", value: "98%" },
               { label: "Global Clients", value: "50+" },
+              { label: "Technologies Used", value: "30+" },
             ].map((stat, index) => (
               <div
                 key={index}
@@ -173,7 +153,7 @@ export default function AboutSection() {
           className="mt-20"
         >
           <h3 className="text-2xl font-bold mb-10 text-center">Meet Our Leadership Team</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {team.map((member, index) => (
               <motion.div
                 key={index}

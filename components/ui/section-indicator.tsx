@@ -9,8 +9,11 @@ interface SectionIndicatorProps {
 }
 
 export default function SectionIndicator({ activeSection, sections = [], onSectionChange }: SectionIndicatorProps) {
-  // Find the index of the active section
-  const activeSectionIndex = sections.findIndex((section) => section.id === activeSection)
+  // Find the index of the active section with proper error handling
+  const activeSectionIndex = sections.length > 0 ? sections.findIndex((section) => section.id === activeSection) : 0
+
+  // If sections array is empty, don't render anything
+  if (sections.length === 0) return null
 
   return (
     <div className="fixed right-6 top-1/2 transform -translate-y-1/2 z-40 hidden lg:flex flex-col items-center space-y-4">

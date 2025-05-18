@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Github, Twitter, Linkedin, Menu, X, ChevronRight } from "lucide-react"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 interface NavigationProps {
   activeSection: string
@@ -15,6 +16,7 @@ interface NavigationProps {
 
 export default function Navigation({ activeSection, onSectionChange, isMenuOpen, setIsMenuOpen }: NavigationProps) {
   const [scrolled, setScrolled] = useState(false)
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   // Handle scroll
   useEffect(() => {
@@ -54,6 +56,26 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
     },
   }
 
+  // Close menu when pressing Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMenuOpen) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isMenuOpen, setIsMenuOpen])
+
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    // Don't lock body scroll as it can interfere with the main scrolling
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [isMenuOpen])
+
   return (
     <>
       <motion.header
@@ -64,20 +86,34 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
+        role="banner"
       >
         <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
           <motion.div
             className="text-xl font-bold tracking-wider cursor-pointer"
-            onClick={() => onSectionChange("home")}
+            onClick={() => {
+              onSectionChange("home")
+              // Make sure we're actually changing to the home section
+              console.log("Navigating to home section")
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            role="button"
+            aria-label="Go to home section"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                onSectionChange("home")
+              }
+            }}
           >
             <span className="text-white">SURVI</span>
             <span className="text-cyan-500">ANT</span>
           </motion.div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-8" role="navigation" aria-label="Main navigation">
             {navItems.map((item) => (
               <motion.button
                 key={item.id}
@@ -88,6 +124,7 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
                 )}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-current={activeSection === item.id ? "page" : undefined}
               >
                 {item.label}
                 <motion.div
@@ -110,9 +147,11 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
               size="icon"
               className="md:hidden text-white"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              <span className="sr-only">Toggle menu</span>
             </Button>
           </motion.div>
         </div>
@@ -122,14 +161,18 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
+            id="mobile-menu"
             initial="closed"
             animate="open"
             exit="closed"
             variants={menuVariants}
             className="fixed inset-0 z-40 bg-black/95 md:hidden pt-24"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation menu"
           >
             <div className="container mx-auto px-4 h-full flex flex-col">
-              <nav className="flex flex-col space-y-2 mb-auto">
+              <nav className="flex flex-col space-y-2 mb-auto" role="navigation" aria-label="Mobile navigation">
                 {navItems.map((item, index) => (
                   <motion.button
                     key={item.id}
@@ -142,6 +185,7 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
                       activeSection === item.id ? "text-cyan-500" : "text-white",
                     )}
                     whileHover={{ x: 10, color: "#22d3ee" }}
+                    aria-current={activeSection === item.id ? "page" : undefined}
                   >
                     {item.label}
                     <ChevronRight className="h-5 w-5" />
@@ -152,21 +196,42 @@ export default function Navigation({ activeSection, onSectionChange, isMenuOpen,
               <div className="py-8">
                 <p className="text-gray-400 mb-4 text-sm">CONNECT WITH US</p>
                 <div className="flex space-x-4">
-                  <motion.div whileHover={{ scale: 1.2, rotate: 5 }} whileTap={{ scale: 0.9 }}>
+                  <motion.a
+                    href="https://github.com/SurviantTech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="GitHub"
+                  >
                     <Button variant="outline" size="icon" className="rounded-full border-gray-700">
                       <Github className="h-5 w-5" />
                     </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.2, rotate: 5 }} whileTap={{ scale: 0.9 }}>
+                  </motion.a>
+                  <motion.a
+                    href="https://twitter.com/SurviantTech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="Twitter"
+                  >
                     <Button variant="outline" size="icon" className="rounded-full border-gray-700">
                       <Twitter className="h-5 w-5" />
                     </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.2, rotate: 5 }} whileTap={{ scale: 0.9 }}>
+                  </motion.a>
+                  <motion.a
+                    href="https://linkedin.com/company/surviant"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label="LinkedIn"
+                  >
                     <Button variant="outline" size="icon" className="rounded-full border-gray-700">
                       <Linkedin className="h-5 w-5" />
                     </Button>
-                  </motion.div>
+                  </motion.a>
                 </div>
               </div>
             </div>

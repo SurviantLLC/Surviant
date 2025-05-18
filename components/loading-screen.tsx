@@ -7,8 +7,10 @@ export default function LoadingScreen() {
   const [progress, setProgress] = useState(0)
   const [text, setText] = useState("")
   const fullText = "SURVIANT TECHNOLOGIES"
+  // Remove this line
+  // const [isReady, setIsReady] = useState(false)
 
-  // Text animation
+  // Text animation - optimized
   useEffect(() => {
     let index = 0
     const intervalId = setInterval(() => {
@@ -22,20 +24,43 @@ export default function LoadingScreen() {
     return () => clearInterval(intervalId)
   }, [])
 
-  // Progress animation
+  // Progress animation - optimized
   useEffect(() => {
+    // Start with 20% progress immediately
+    setProgress(20)
+
     const interval = setInterval(() => {
       setProgress((prev) => {
-        const next = prev + Math.random() * 3
+        // Accelerate progress as we go
+        const increment = prev < 50 ? 5 : prev < 80 ? 3 : 1
+        const next = prev + increment
         return next >= 100 ? 100 : next
       })
-    }, 50)
+    }, 30) // Faster updates
 
     return () => clearInterval(interval)
   }, [])
 
+  // Preload critical resources
+  useEffect(() => {
+    // Preload key images
+    const preloadImages = ["/team-member-1.png", "/team-member-2.png", "/client-logo-1.png", "/client-logo-2.png"]
+
+    preloadImages.forEach((src) => {
+      const img = new Image()
+      img.src = src
+    })
+  }, [])
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={progress}
+      aria-label="Loading Surviant Technologies website"
+    >
       <div className="relative w-full max-w-md px-4">
         <div className="mb-12">
           <motion.div
